@@ -14,6 +14,17 @@ find_package(MAVSDK REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(Threads REQUIRED)
 
+# Workaround for Ubuntu 18.04 where SDL2::SDL2 isn't provided yet.
+if (SDL2_FOUND AND NOT TARGET SLD2::SDL2)
+    add_library(SDL2::SDL2 UNKNOWN IMPORTED)
+    set_target_properties(SDL2::SDL2 PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION "${SDL2_LIBRARIES}"
+        INTERFACE_INCLUDE_DIRECTORIES "${SDL2_INCLUDE_DIRS}"
+    )
+endif()
+
+
 target_link_libraries(manual_control
     MAVSDK::mavsdk_action
     MAVSDK::mavsdk_telemetry
