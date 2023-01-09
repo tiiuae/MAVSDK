@@ -1,0 +1,45 @@
+name: Build and package
+
+on:
+  push:
+  pull_request:
+
+
+jobs:
+
+  mavsdk-deb-artifacts:
+    name: Ubuntu/Debian packaging (Ubuntu 20.04)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout MAVSDK
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: docker/setup-buildx-action@v1
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/tiiuae/mavsdk-deb-artifacts
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build mavsdk-deb-artifacts image and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
